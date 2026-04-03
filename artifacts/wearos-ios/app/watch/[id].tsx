@@ -242,7 +242,7 @@ export default function WatchDetailScreen() {
             style={[styles.disconnectBtn, { borderColor: colors.destructive }]}
             onPress={handleDisconnect}
           >
-            <Feather name="bluetooth-off" size={18} color={colors.destructive} />
+            <Feather name="bluetooth" size={18} color={colors.destructive} />
             <Text style={[styles.disconnectBtnText, { color: colors.destructive }]}>
               Disconnect Watch
             </Text>

@@ -14,7 +14,12 @@
       "backgroundColor": "#0b1526"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "WearBridge uses Bluetooth to scan for and connect to your Wear OS watch.",
+        "NSBluetoothPeripheralUsageDescription": "WearBridge uses Bluetooth to connect to your Wear OS watch."
+      },
+      "bundleIdentifier": "com.anonymous.wearos-ios"
     },
     "android": {},
     "web": {

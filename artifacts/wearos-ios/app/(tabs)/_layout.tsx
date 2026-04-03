@@ -107,8 +107,10 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
+  // The unstable native tabs API can render inconsistently on some
+  // iOS builds/dev clients. Keep the classic tabs for a reliable UI.
+  // if (isLiquidGlassAvailable()) {
+  //   return <NativeTabLayout />;
+  // }
   return <ClassicTabLayout />;
 }

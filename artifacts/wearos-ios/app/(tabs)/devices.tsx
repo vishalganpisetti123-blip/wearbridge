@@ -56,6 +56,12 @@ function DiscoveredCard({
   pairing: boolean;
 }) {
   const colors = useColors();
+  const title =
+    device.name && device.name !== "Wear OS Watch" ? device.name : device.model;
+  const subtitleId =
+    device.id.length > 18
+      ? `${device.id.slice(0, 8)}...${device.id.slice(-6)}`
+      : device.id;
   return (
     <Animated.View entering={FadeIn} exiting={FadeOut} layout={Layout}>
       <View style={[dStyles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -63,10 +69,12 @@ function DiscoveredCard({
           <Feather name="watch" size={20} color={colors.mutedForeground} />
         </View>
         <View style={dStyles.info}>
-          <Text style={[dStyles.name, { color: colors.foreground }]}>{device.model}</Text>
+          <Text style={[dStyles.name, { color: colors.foreground }]} numberOfLines={1}>
+            {title}
+          </Text>
           <View style={dStyles.metaRow}>
             <Text style={[dStyles.meta, { color: colors.mutedForeground }]}>
-              {device.macAddress}
+              {subtitleId}
             </Text>
           </View>
           <View style={dStyles.metaRow}>
@@ -308,6 +316,7 @@ export default function DevicesScreen() {
     devices,
     discoveredDevices,
     bluetoothState,
+    bridgeState,
     isScanning,
     enableBluetooth,
     disableBluetooth,
@@ -316,6 +325,7 @@ export default function DevicesScreen() {
     pairDevice,
     connectDevice,
     removeDevice,
+    refreshBridgeData,
   } = useWatch();
 
   const [pairingId, setPairingId] = useState<string | null>(null);
@@ -345,16 +355,30 @@ export default function DevicesScreen() {
   const handlePair = async (disc: DiscoveredDevice) => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setPairingId(disc.id);
-    await pairDevice(disc);
-    setPairingId(null);
-    if (Platform.OS !== "web") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try {
+      await pairDevice(disc);
+      if (Platform.OS !== "web") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Unable to connect to this watch.";
+      Alert.alert("Pairing failed", msg);
+    } finally {
+      setPairingId(null);
+    }
   };
 
   const handleConnect = async (id: string) => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setConnectingId(id);
-    await connectDevice(id);
-    setConnectingId(null);
+    try {
+      await connectDevice(id);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Unable to connect to this watch.";
+      Alert.alert("Connection failed", msg);
+    } finally {
+      setConnectingId(null);
+    }
   };
 
   const handleRemove = (id: string, name: string) => {
@@ -379,6 +403,7 @@ export default function DevicesScreen() {
   const isBluetoothOn = bluetoothState === "enabled";
   const connectedDevices = devices.filter((d) => d.isConnected);
   const pairedNotConnected = devices.filter((d) => !d.isConnected);
+  const bridgeConnected = bridgeState === "connected";
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -389,6 +414,41 @@ export default function DevicesScreen() {
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
             {devices.length} paired · {connectedDevices.length} connected
           </Text>
+            <TouchableOpacity
+              onPress={refreshBridgeData}
+              style={styles.bridgeRow}
+              activeOpacity={0.7}
+            >
+              <Feather
+                name={bridgeConnected ? "cloud" : bridgeState === "syncing" ? "refresh-cw" : "cloud-off"}
+                size={14}
+                color={
+                  bridgeConnected
+                    ? colors.success
+                    : bridgeState === "syncing"
+                      ? colors.primary
+                      : colors.destructive
+                }
+              />
+              <Text
+                style={[
+                  styles.bridgeText,
+                  {
+                    color: bridgeConnected
+                      ? colors.success
+                      : bridgeState === "syncing"
+                        ? colors.primary
+                        : colors.destructive,
+                  },
+                ]}
+              >
+                {bridgeConnected
+                  ? "Watch bridge connected"
+                  : bridgeState === "syncing"
+                    ? "Syncing watch bridge..."
+                    : "Watch bridge disconnected"}
+              </Text>
+            </TouchableOpacity>
         </View>
       </View>
 
@@ -553,7 +613,7 @@ export default function DevicesScreen() {
         {!isBluetoothOn && (
           <View style={styles.emptyState}>
             <View style={[styles.emptyIcon, { backgroundColor: colors.muted }]}>
-              <Feather name="bluetooth-off" size={36} color={colors.mutedForeground} />
+              <Feather name="bluetooth" size={36} color={colors.mutedForeground} />
             </View>
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
               Bluetooth is off
@@ -598,6 +658,13 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 28, fontFamily: "Inter_700Bold" },
   subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
+  bridgeRow: {
+    marginTop: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  bridgeText: { fontSize: 12, fontFamily: "Inter_500Medium" },
   scroll: { paddingHorizontal: 20, gap: 14 },
   bluetoothCard: {
     flexDirection: "row",

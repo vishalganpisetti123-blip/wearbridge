@@ -1,0 +1,21 @@
+# Local PostgreSQL for Watch Bridge API (Drizzle).
+# Usage:
+#   docker compose up -d
+#   export DATABASE_URL="postgres://postgres:postgres@localhost:5432/watchbridge"
+#   pnpm --filter @workspace/db run push
+#   pnpm --filter @workspace/api-server run dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: watchbridge
+    ports:
+      - "5432:5432"
+    volumes:
+      - watchbridge_pgdata:/var/lib/postgresql/data
+
+volumes:
+  watchbridge_pgdata:

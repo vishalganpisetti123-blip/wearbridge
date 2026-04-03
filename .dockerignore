@@ -1,0 +1,15 @@
+.git
+.gitignore
+**/.DS_Store
+**/node_modules
+**/dist
+**/.expo
+**/ios/Pods
+**/android/.gradle
+**/android/build
+**/android/app/build
+.cursor
+*.md
+.env
+.env.*
+!.env.example

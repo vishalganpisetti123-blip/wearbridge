@@ -8,7 +8,7 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -43,14 +43,25 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+  const [bootstrapComplete, setBootstrapComplete] = useState(false);
 
   useEffect(() => {
+    // Fail-safe: do not keep users stuck on splash if font loading hangs.
+    const timeout = setTimeout(() => {
+      setBootstrapComplete(true);
+      SplashScreen.hideAsync().catch(() => {});
+    }, 3000);
+
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      clearTimeout(timeout);
+      setBootstrapComplete(true);
+      SplashScreen.hideAsync().catch(() => {});
     }
+
+    return () => clearTimeout(timeout);
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded && !fontError) return null;
+  if (!bootstrapComplete) return null;
 
   return (
     <SafeAreaProvider>
