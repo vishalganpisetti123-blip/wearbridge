@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "WearBridge - Wear OS for iOS"
+version = "1.0.0"
+id = "artifacts/wearos-ios"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 23589
+
+[services.development]
+run = "pnpm --filter @workspace/wearos-ios run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/wearos-ios", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/wearos-ios", "run", "serve" ]
+
+[services.env]
+PORT = "23589"
+BASE_PATH = "/"

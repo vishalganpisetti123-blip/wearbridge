@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "DQ-5FCNuPEZC6p-vOac3J"
+uri = "file://artifacts/wearos-ios/assets/images/icon.png"
+type = "image"
+title = "generated_image"
