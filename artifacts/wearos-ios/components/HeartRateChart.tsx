@@ -35,8 +35,8 @@ export function HeartRateChart({ heartRate }: HeartRateChartProps) {
     );
     const pulseAnim = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1.15, duration: 500, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 1, duration: 500, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1.15, duration: 500, useNativeDriver: false }),
+        Animated.timing(pulse, { toValue: 1, duration: 500, useNativeDriver: false }),
       ]),
     );
     animations.forEach((a) => a.start());

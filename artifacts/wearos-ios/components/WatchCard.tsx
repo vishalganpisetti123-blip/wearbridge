@@ -192,11 +192,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     borderWidth: 1.5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 3,
+    ...Platform.select({
+      web: { boxShadow: "0 2px 10px rgba(0,0,0,0.07)" },
+      default: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.07,
+        shadowRadius: 10,
+        elevation: 3,
+      },
+    }),
     gap: 12,
   },
   topRow: {
