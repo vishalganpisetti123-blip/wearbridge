@@ -217,6 +217,39 @@ export function WatchProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const saveDevices = async (devs: WatchDevice[]) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(devs));
+    } catch {}
+  };
+
+  const refreshBridgeData = useCallback(async () => {
+    if (!WATCH_BRIDGE_API_URL) return;
+    setBridgeState("syncing");
+    try {
+      const res = await fetch(
+        `${WATCH_BRIDGE_API_URL}/api/watch/devices?userId=${encodeURIComponent(
+          WATCH_BRIDGE_USER_ID,
+        )}`,
+      );
+      if (!res.ok) throw new Error(`Bridge sync failed: ${res.status}`);
+      const list = (await res.json()) as any[];
+      const connectedId =
+        devices.find((d) => d.isConnected)?.id ??
+        (list.length > 0 ? String(list[0]?.watchId ?? list[0]?.id ?? "") : null);
+      const mapped = list.map((w) =>
+        mapBridgeWatchToDevice(w, connectedId === String(w.watchId ?? w.id)),
+      );
+      if (mapped.length > 0) {
+        setDevices(mapped);
+        saveDevices(mapped);
+      }
+      setBridgeState("connected");
+    } catch {
+      setBridgeState("error");
+    }
+  }, [devices, mapBridgeWatchToDevice]);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -274,39 +307,6 @@ export function WatchProvider({ children }: { children: React.ReactNode }) {
         setHealthSyncEnabled(s.healthSyncEnabled ?? true);
         if (s.bluetoothEnabled) setBluetoothState("enabled");
       }
-    } catch {}
-  };
-
-  const refreshBridgeData = useCallback(async () => {
-    if (!WATCH_BRIDGE_API_URL) return;
-    setBridgeState("syncing");
-    try {
-      const res = await fetch(
-        `${WATCH_BRIDGE_API_URL}/api/watch/devices?userId=${encodeURIComponent(
-          WATCH_BRIDGE_USER_ID,
-        )}`,
-      );
-      if (!res.ok) throw new Error(`Bridge sync failed: ${res.status}`);
-      const list = (await res.json()) as any[];
-      const connectedId =
-        devices.find((d) => d.isConnected)?.id ??
-        (list.length > 0 ? String(list[0]?.watchId ?? list[0]?.id ?? "") : null);
-      const mapped = list.map((w) =>
-        mapBridgeWatchToDevice(w, connectedId === String(w.watchId ?? w.id)),
-      );
-      if (mapped.length > 0) {
-        setDevices(mapped);
-        saveDevices(mapped);
-      }
-      setBridgeState("connected");
-    } catch {
-      setBridgeState("error");
-    }
-  }, [devices, mapBridgeWatchToDevice]);
-
-  const saveDevices = async (devs: WatchDevice[]) => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(devs));
     } catch {}
   };
 
