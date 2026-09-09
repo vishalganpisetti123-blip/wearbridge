@@ -31,9 +31,10 @@ Open the Wear OS companion, tap **Start Pairing**, grant the requested Bluetooth
 
 ```sh
 pnpm run typecheck
+pnpm run build
 ```
 
-The repository-wide `pnpm run build` is currently Linux/Replit-oriented: its workspace configuration excludes native macOS Rollup binaries, so the mockup sandbox build is not a valid macOS verification command. The iPhone package typecheck is included in the command above.
+The workspace retains the minimum package-release-age policy and supports both its Replit/Linux deployment and the macOS host needed for native iOS development.
 
 ## Product boundary
 
