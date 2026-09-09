@@ -17,9 +17,10 @@
       "supportsTablet": false,
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "WearBridge uses Bluetooth to scan for and connect to your Wear OS watch.",
-        "NSBluetoothPeripheralUsageDescription": "WearBridge uses Bluetooth to connect to your Wear OS watch."
+        "NSBluetoothPeripheralUsageDescription": "WearBridge uses Bluetooth to connect to your Wear OS watch.",
+        "UIBackgroundModes": ["bluetooth-central"]
       },
-      "bundleIdentifier": "com.anonymous.wearos-ios"
+      "bundleIdentifier": "com.wearbridge.ios"
     },
     "android": {},
     "web": {
@@ -30,6 +31,14 @@
         "expo-router",
         {
           "origin": "https://replit.com/"
+        }
+      ],
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": true,
+          "modes": ["central"],
+          "bluetoothAlwaysPermission": "WearBridge uses Bluetooth to connect to your Wear OS watch and receive health telemetry."
         }
       ],
       "expo-font",

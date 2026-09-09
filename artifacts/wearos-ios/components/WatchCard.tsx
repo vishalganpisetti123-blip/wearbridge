@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Platform,
   StyleSheet,
   Text,
@@ -39,30 +40,32 @@ export function WatchCard({ device, onLongPress }: WatchCardProps) {
       router.push(`/watch/${device.id}`);
       return;
     }
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (Platform.OS !== "web")
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setConnecting(true);
     scale.value = withSpring(0.97, { damping: 15 });
-    await connectDevice(device.id);
-    scale.value = withSpring(1);
-    setConnecting(false);
-    router.push(`/watch/${device.id}`);
+    try {
+      await connectDevice(device.id);
+      router.push(`/watch/${device.id}`);
+    } catch (error) {
+      Alert.alert(
+        "Connection failed",
+        error instanceof Error ? error.message : "Unable to connect the watch.",
+      );
+    } finally {
+      scale.value = withSpring(1);
+      setConnecting(false);
+    }
   };
 
   const batteryColor =
-    device.batteryLevel > 50
-      ? colors.success
-      : device.batteryLevel > 20
-        ? colors.warning
-        : colors.destructive;
-
-  const batteryIcon =
-    device.batteryLevel > 75
-      ? "battery"
+    device.batteryLevel === null
+      ? colors.mutedForeground
       : device.batteryLevel > 50
-        ? "battery"
-        : device.batteryLevel > 25
-          ? "battery"
-          : "battery";
+        ? colors.success
+        : device.batteryLevel > 20
+          ? colors.warning
+          : colors.destructive;
 
   return (
     <Animated.View style={animStyle}>
@@ -100,7 +103,10 @@ export function WatchCard({ device, onLongPress }: WatchCardProps) {
             </View>
             {device.isConnected && (
               <View
-                style={[styles.connectedDot, { backgroundColor: colors.success }]}
+                style={[
+                  styles.connectedDot,
+                  { backgroundColor: colors.success },
+                ]}
               />
             )}
           </View>
@@ -117,10 +123,15 @@ export function WatchCard({ device, onLongPress }: WatchCardProps) {
           </View>
           <View style={styles.batteryWrap}>
             {device.isCharging && (
-              <Feather name="zap" size={12} color={colors.warning} style={{ marginBottom: 2 }} />
+              <Feather
+                name="zap"
+                size={12}
+                color={colors.warning}
+                style={{ marginBottom: 2 }}
+              />
             )}
             <Text style={[styles.batteryText, { color: batteryColor }]}>
-              {device.batteryLevel}%
+              {device.batteryLevel === null ? "—" : `${device.batteryLevel}%`}
             </Text>
           </View>
         </View>
@@ -132,27 +143,54 @@ export function WatchCard({ device, onLongPress }: WatchCardProps) {
             <>
               <View style={styles.metricItem}>
                 <Feather name="activity" size={14} color={colors.teal} />
-                <Text style={[styles.metricValue, { color: colors.foreground }]}>
-                  {device.heartRate}
+                <Text
+                  style={[styles.metricValue, { color: colors.foreground }]}
+                >
+                  {device.heartRate ?? "—"}
                 </Text>
-                <Text style={[styles.metricUnit, { color: colors.mutedForeground }]}>
+                <Text
+                  style={[styles.metricUnit, { color: colors.mutedForeground }]}
+                >
                   bpm
                 </Text>
               </View>
-              <View style={[styles.metricDivider, { backgroundColor: colors.border }]} />
+              <View
+                style={[
+                  styles.metricDivider,
+                  { backgroundColor: colors.border },
+                ]}
+              />
               <View style={styles.metricItem}>
                 <Feather name="trending-up" size={14} color={colors.primary} />
-                <Text style={[styles.metricValue, { color: colors.foreground }]}>
-                  {device.steps.toLocaleString()}
+                <Text
+                  style={[styles.metricValue, { color: colors.foreground }]}
+                >
+                  {device.steps === null ? "—" : device.steps.toLocaleString()}
                 </Text>
-                <Text style={[styles.metricUnit, { color: colors.mutedForeground }]}>
+                <Text
+                  style={[styles.metricUnit, { color: colors.mutedForeground }]}
+                >
                   steps
                 </Text>
               </View>
-              <View style={[styles.metricDivider, { backgroundColor: colors.border }]} />
+              <View
+                style={[
+                  styles.metricDivider,
+                  { backgroundColor: colors.border },
+                ]}
+              />
               <View style={styles.metricItem}>
-                <Feather name="clock" size={14} color={colors.mutedForeground} />
-                <Text style={[styles.metricLabel, { color: colors.mutedForeground }]}>
+                <Feather
+                  name="clock"
+                  size={14}
+                  color={colors.mutedForeground}
+                />
+                <Text
+                  style={[
+                    styles.metricLabel,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
                   {device.lastSync}
                 </Text>
               </View>
@@ -178,7 +216,11 @@ export function WatchCard({ device, onLongPress }: WatchCardProps) {
               style={[styles.chevronBtn]}
               onPress={() => router.push(`/watch/${device.id}`)}
             >
-              <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+              <Feather
+                name="chevron-right"
+                size={18}
+                color={colors.mutedForeground}
+              />
             </TouchableOpacity>
           )}
         </View>
