@@ -4,7 +4,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TouchableOpacity,
   View,
@@ -20,8 +19,6 @@ interface SettingRowProps {
   iconBg: string;
   label: string;
   description?: string;
-  value?: boolean;
-  onToggle?: () => void;
   onPress?: () => void;
   showChevron?: boolean;
   valueText?: string;
@@ -33,8 +30,6 @@ function SettingRow({
   iconBg,
   label,
   description,
-  value,
-  onToggle,
   onPress,
   showChevron,
   valueText,
@@ -45,34 +40,32 @@ function SettingRow({
       style={[styles.settingRow, { backgroundColor: colors.card }]}
       onPress={onPress}
       activeOpacity={onPress ? 0.7 : 1}
-      disabled={!onPress && !onToggle}
+      disabled={!onPress}
     >
       <View style={[styles.settingIcon, { backgroundColor: iconBg }]}>
         <Feather name={icon} size={18} color={iconColor} />
       </View>
       <View style={styles.settingContent}>
-        <Text style={[styles.settingLabel, { color: colors.foreground }]}>{label}</Text>
+        <Text style={[styles.settingLabel, { color: colors.foreground }]}>
+          {label}
+        </Text>
         {description && (
           <Text style={[styles.settingDesc, { color: colors.mutedForeground }]}>
             {description}
           </Text>
         )}
       </View>
-      {value !== undefined && onToggle && (
-        <Switch
-          value={value}
-          onValueChange={onToggle}
-          trackColor={{ false: colors.border, true: colors.primary }}
-          thumbColor="#fff"
-        />
-      )}
       {valueText && (
         <Text style={[styles.valueText, { color: colors.mutedForeground }]}>
           {valueText}
         </Text>
       )}
       {showChevron && (
-        <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+        <Feather
+          name="chevron-right"
+          size={18}
+          color={colors.mutedForeground}
+        />
       )}
     </TouchableOpacity>
   );
@@ -101,13 +94,7 @@ function SettingSection({
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const {
-    connectedDevice,
-    notificationsEnabled,
-    healthSyncEnabled,
-    toggleNotifications,
-    toggleHealthSync,
-  } = useWatch();
+  const { connectedDevice } = useWatch();
 
   const topPad = Platform.OS === "web" ? Math.max(insets.top, 67) : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : 0;
@@ -120,27 +107,50 @@ export default function SettingsScreen() {
           { paddingTop: topPad + 16, backgroundColor: colors.background },
         ]}
       >
-        <Text style={[styles.title, { color: colors.foreground }]}>Settings</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>
+          Settings
+        </Text>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 + bottomPad }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: 120 + bottomPad },
+        ]}
       >
         {connectedDevice && (
-          <View style={[styles.watchSummary, { backgroundColor: colors.navyDark }]}>
-            <View style={[styles.watchDot, { backgroundColor: colors.success }]} />
+          <View
+            style={[styles.watchSummary, { backgroundColor: colors.navyDark }]}
+          >
+            <View
+              style={[styles.watchDot, { backgroundColor: colors.success }]}
+            />
             <View style={{ flex: 1 }}>
               <Text style={[styles.watchSummaryName, { color: "#fff" }]}>
                 {connectedDevice.name}
               </Text>
-              <Text style={[styles.watchSummaryModel, { color: "rgba(255,255,255,0.5)" }]}>
+              <Text
+                style={[
+                  styles.watchSummaryModel,
+                  { color: "rgba(255,255,255,0.5)" },
+                ]}
+              >
                 {connectedDevice.model} · v{connectedDevice.firmwareVersion}
               </Text>
             </View>
-            <View style={[styles.batteryBadge, { backgroundColor: "rgba(255,255,255,0.12)" }]}>
+            <View
+              style={[
+                styles.batteryBadge,
+                { backgroundColor: "rgba(255,255,255,0.12)" },
+              ]}
+            >
               <Feather name="battery" size={14} color="rgba(255,255,255,0.7)" />
-              <Text style={styles.batteryBadgeText}>{connectedDevice.batteryLevel}%</Text>
+              <Text style={styles.batteryBadgeText}>
+                {connectedDevice.batteryLevel === null
+                  ? "—"
+                  : `${connectedDevice.batteryLevel}%`}
+              </Text>
             </View>
           </View>
         )}
@@ -151,95 +161,30 @@ export default function SettingsScreen() {
             iconColor={colors.primary}
             iconBg={colors.blueLight}
             label="Notification Sync"
-            description="Mirror iPhone notifications on your watch"
-            value={notificationsEnabled}
-            onToggle={toggleNotifications}
+            description="Requires an accessory-side Apple Notification Center Service client; ordinary iOS apps cannot read other apps' notifications"
+            valueText="Not available"
           />
-          <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
+          <View
+            style={[styles.rowDivider, { backgroundColor: colors.border }]}
+          />
           <SettingRow
             icon="activity"
             iconColor="#22c55e"
             iconBg="#dcfce7"
             label="Health Data Sync"
-            description="Sync steps, heart rate, and sleep data"
-            value={healthSyncEnabled}
-            onToggle={toggleHealthSync}
+            description="Supported watch metrics stay on the watch and iPhone"
+            valueText="Local BLE"
           />
-          <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
+          <View
+            style={[styles.rowDivider, { backgroundColor: colors.border }]}
+          />
           <SettingRow
             icon="refresh-cw"
             iconColor="#8b5cf6"
             iconBg="#ede9fe"
             label="Sync Frequency"
-            description="How often to sync data"
-            valueText="Every 5 min"
-            showChevron
-          />
-        </SettingSection>
-
-        <SettingSection title="WATCH">
-          <SettingRow
-            icon="grid"
-            iconColor={colors.teal}
-            iconBg={colors.tealLight}
-            label="Watch Face"
-            description={connectedDevice?.watchFace ?? "Not connected"}
-            valueText={connectedDevice ? connectedDevice.watchFace : "—"}
-            showChevron
-          />
-          <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
-          <SettingRow
-            icon="volume-2"
-            iconColor="#f59e0b"
-            iconBg="#fef3c7"
-            label="Haptic Feedback"
-            description="Control watch vibration intensity"
-            valueText="Medium"
-            showChevron
-          />
-          <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
-          <SettingRow
-            icon="sun"
-            iconColor="#ef4444"
-            iconBg="#fee2e2"
-            label="Always-On Display"
-            description="Keep watch face visible"
-            value={false}
-          />
-        </SettingSection>
-
-        <SettingSection title="NOTIFICATIONS">
-          <SettingRow
-            icon="message-circle"
-            iconColor="#25d366"
-            iconBg="#dcfce7"
-            label="Messages"
-            value={true}
-          />
-          <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
-          <SettingRow
-            icon="mail"
-            iconColor="#ea4335"
-            iconBg="#fee2e2"
-            label="Email"
-            value={true}
-          />
-          <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
-          <SettingRow
-            icon="calendar"
-            iconColor={colors.primary}
-            iconBg={colors.blueLight}
-            label="Calendar"
-            value={true}
-          />
-          <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
-          <SettingRow
-            icon="bell-off"
-            iconColor={colors.mutedForeground}
-            iconBg={colors.muted}
-            label="Do Not Disturb"
-            description="Pause all notifications"
-            value={false}
+            description="BLE updates arrive while the watch is connected"
+            valueText="Live"
           />
         </SettingSection>
 
@@ -251,7 +196,9 @@ export default function SettingsScreen() {
             label="App Version"
             valueText="1.0.0"
           />
-          <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
+          <View
+            style={[styles.rowDivider, { backgroundColor: colors.border }]}
+          />
           <SettingRow
             icon="shield"
             iconColor="#22c55e"
@@ -259,7 +206,9 @@ export default function SettingsScreen() {
             label="Privacy Policy"
             showChevron
           />
-          <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
+          <View
+            style={[styles.rowDivider, { backgroundColor: colors.border }]}
+          />
           <SettingRow
             icon="help-circle"
             iconColor="#8b5cf6"

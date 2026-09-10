@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -16,7 +17,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
 
 import { useColors } from "@/hooks/useColors";
-import { useWatch, DiscoveredDevice, WatchDevice } from "@/context/WatchContext";
+import {
+  useWatch,
+  DiscoveredDevice,
+  WatchDevice,
+} from "@/context/WatchContext";
 
 function SignalBars({ rssi }: { rssi: number }) {
   const colors = useColors();
@@ -31,8 +36,7 @@ function SignalBars({ rssi }: { rssi: number }) {
             sigStyles.bar,
             { height: bar * 4 + 4 },
             {
-              backgroundColor:
-                bar <= strength ? colors.success : colors.border,
+              backgroundColor: bar <= strength ? colors.success : colors.border,
             },
           ]}
         />
@@ -64,12 +68,20 @@ function DiscoveredCard({
       : device.id;
   return (
     <Animated.View entering={FadeIn} exiting={FadeOut} layout={Layout}>
-      <View style={[dStyles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View
+        style={[
+          dStyles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
         <View style={[dStyles.iconBox, { backgroundColor: colors.muted }]}>
           <Feather name="watch" size={20} color={colors.mutedForeground} />
         </View>
         <View style={dStyles.info}>
-          <Text style={[dStyles.name, { color: colors.foreground }]} numberOfLines={1}>
+          <Text
+            style={[dStyles.name, { color: colors.foreground }]}
+            numberOfLines={1}
+          >
             {title}
           </Text>
           <View style={dStyles.metaRow}>
@@ -81,9 +93,6 @@ function DiscoveredCard({
             <SignalBars rssi={device.rssi} />
             <Text style={[dStyles.rssi, { color: colors.mutedForeground }]}>
               {device.rssi} dBm
-            </Text>
-            <Text style={[dStyles.battery, { color: colors.success }]}>
-              {device.batteryLevel}%
             </Text>
           </View>
         </View>
@@ -127,7 +136,6 @@ const dStyles = StyleSheet.create({
   metaRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   meta: { fontSize: 11, fontFamily: "Inter_400Regular" },
   rssi: { fontSize: 11, fontFamily: "Inter_400Regular" },
-  battery: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
   pairBtn: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -156,11 +164,13 @@ function PairedWatchRow({
 }) {
   const colors = useColors();
   const batteryColor =
-    device.batteryLevel > 50
-      ? colors.success
-      : device.batteryLevel > 20
-        ? colors.warning
-        : colors.destructive;
+    device.batteryLevel === null
+      ? colors.mutedForeground
+      : device.batteryLevel > 50
+        ? colors.success
+        : device.batteryLevel > 20
+          ? colors.warning
+          : colors.destructive;
 
   return (
     <Animated.View entering={FadeIn} exiting={FadeOut} layout={Layout}>
@@ -168,7 +178,9 @@ function PairedWatchRow({
         style={[
           pStyles.card,
           {
-            backgroundColor: device.isConnected ? colors.blueLight : colors.card,
+            backgroundColor: device.isConnected
+              ? colors.blueLight
+              : colors.card,
             borderColor: device.isConnected ? colors.primary : colors.border,
           },
         ]}
@@ -178,7 +190,9 @@ function PairedWatchRow({
             style={[
               pStyles.iconBox,
               {
-                backgroundColor: device.isConnected ? colors.primary : colors.muted,
+                backgroundColor: device.isConnected
+                  ? colors.primary
+                  : colors.muted,
               },
             ]}
           >
@@ -189,7 +203,12 @@ function PairedWatchRow({
             />
           </View>
           {device.isConnected && (
-            <View style={[pStyles.connectedDot, { backgroundColor: colors.success }]} />
+            <View
+              style={[
+                pStyles.connectedDot,
+                { backgroundColor: colors.success },
+              ]}
+            />
           )}
         </View>
 
@@ -200,7 +219,10 @@ function PairedWatchRow({
           }}
           activeOpacity={device.isConnected ? 0.7 : 1}
         >
-          <Text style={[pStyles.name, { color: colors.foreground }]} numberOfLines={1}>
+          <Text
+            style={[pStyles.name, { color: colors.foreground }]}
+            numberOfLines={1}
+          >
             {device.name}
           </Text>
           <Text style={[pStyles.model, { color: colors.mutedForeground }]}>
@@ -211,11 +233,12 @@ function PairedWatchRow({
               <>
                 <Feather name="activity" size={12} color={colors.teal} />
                 <Text style={[pStyles.stat, { color: colors.foreground }]}>
-                  {device.heartRate} bpm
+                  {device.heartRate === null ? "—" : device.heartRate} bpm
                 </Text>
                 <Text style={[pStyles.dot, { color: colors.border }]}>·</Text>
                 <Text style={[pStyles.stat, { color: colors.foreground }]}>
-                  {device.steps.toLocaleString()} steps
+                  {device.steps === null ? "—" : device.steps.toLocaleString()}{" "}
+                  steps
                 </Text>
               </>
             ) : (
@@ -228,7 +251,7 @@ function PairedWatchRow({
 
         <View style={pStyles.actions}>
           <Text style={[pStyles.battery, { color: batteryColor }]}>
-            {device.batteryLevel}%
+            {device.batteryLevel === null ? "—" : `${device.batteryLevel}%`}
           </Text>
 
           {!device.isConnected && (
@@ -246,7 +269,10 @@ function PairedWatchRow({
           )}
 
           <TouchableOpacity
-            style={[pStyles.removeBtn, { backgroundColor: colors.destructive + "15" }]}
+            style={[
+              pStyles.removeBtn,
+              { backgroundColor: colors.destructive + "15" },
+            ]}
             onPress={onRemove}
             hitSlop={6}
           >
@@ -288,7 +314,12 @@ const pStyles = StyleSheet.create({
   info: { flex: 1, gap: 3 },
   name: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
   model: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  statsRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 },
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginTop: 2,
+  },
   stat: { fontSize: 12, fontFamily: "Inter_400Regular" },
   dot: { fontSize: 12 },
   actions: { alignItems: "center", gap: 8 },
@@ -316,16 +347,13 @@ export default function DevicesScreen() {
     devices,
     discoveredDevices,
     bluetoothState,
-    bridgeState,
     isScanning,
     enableBluetooth,
-    disableBluetooth,
     startScan,
     stopScan,
     pairDevice,
     connectDevice,
     removeDevice,
-    refreshBridgeData,
   } = useWatch();
 
   const [pairingId, setPairingId] = useState<string | null>(null);
@@ -335,12 +363,13 @@ export default function DevicesScreen() {
   const bottomPad = Platform.OS === "web" ? 34 : 0;
 
   const handleToggleBluetooth = () => {
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (bluetoothState === "enabled") {
-      disableBluetooth();
-    } else {
-      enableBluetooth();
+    if (Platform.OS !== "web")
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (bluetoothState === "enabled") return;
+    if (Platform.OS !== "web") {
+      Linking.openSettings().catch(() => {});
     }
+    enableBluetooth();
   };
 
   const handleScan = async () => {
@@ -348,12 +377,21 @@ export default function DevicesScreen() {
       stopScan();
       return;
     }
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await startScan();
+    if (Platform.OS !== "web")
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await startScan();
+    } catch (error) {
+      Alert.alert(
+        "Scan failed",
+        error instanceof Error ? error.message : "Unable to scan for watches.",
+      );
+    }
   };
 
   const handlePair = async (disc: DiscoveredDevice) => {
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (Platform.OS !== "web")
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setPairingId(disc.id);
     try {
       await pairDevice(disc);
@@ -361,7 +399,8 @@ export default function DevicesScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Unable to connect to this watch.";
+      const msg =
+        e instanceof Error ? e.message : "Unable to connect to this watch.";
       Alert.alert("Pairing failed", msg);
     } finally {
       setPairingId(null);
@@ -369,12 +408,14 @@ export default function DevicesScreen() {
   };
 
   const handleConnect = async (id: string) => {
-    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== "web")
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setConnectingId(id);
     try {
       await connectDevice(id);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Unable to connect to this watch.";
+      const msg =
+        e instanceof Error ? e.message : "Unable to connect to this watch.";
       Alert.alert("Connection failed", msg);
     } finally {
       setConnectingId(null);
@@ -392,7 +433,9 @@ export default function DevicesScreen() {
           style: "destructive",
           onPress: () => {
             if (Platform.OS !== "web")
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              Haptics.notificationAsync(
+                Haptics.NotificationFeedbackType.Warning,
+              );
             removeDevice(id);
           },
         },
@@ -403,60 +446,29 @@ export default function DevicesScreen() {
   const isBluetoothOn = bluetoothState === "enabled";
   const connectedDevices = devices.filter((d) => d.isConnected);
   const pairedNotConnected = devices.filter((d) => !d.isConnected);
-  const bridgeConnected = bridgeState === "connected";
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 16 }]}>
         <View>
-          <Text style={[styles.title, { color: colors.foreground }]}>Devices</Text>
+          <Text style={[styles.title, { color: colors.foreground }]}>
+            Devices
+          </Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
             {devices.length} paired · {connectedDevices.length} connected
           </Text>
-            <TouchableOpacity
-              onPress={refreshBridgeData}
-              style={styles.bridgeRow}
-              activeOpacity={0.7}
-            >
-              <Feather
-                name={bridgeConnected ? "cloud" : bridgeState === "syncing" ? "refresh-cw" : "cloud-off"}
-                size={14}
-                color={
-                  bridgeConnected
-                    ? colors.success
-                    : bridgeState === "syncing"
-                      ? colors.primary
-                      : colors.destructive
-                }
-              />
-              <Text
-                style={[
-                  styles.bridgeText,
-                  {
-                    color: bridgeConnected
-                      ? colors.success
-                      : bridgeState === "syncing"
-                        ? colors.primary
-                        : colors.destructive,
-                  },
-                ]}
-              >
-                {bridgeConnected
-                  ? "Watch bridge connected"
-                  : bridgeState === "syncing"
-                    ? "Syncing watch bridge..."
-                    : "Watch bridge disconnected"}
-              </Text>
-            </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scroll, { paddingBottom: 120 + bottomPad }]}
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingBottom: 120 + bottomPad },
+        ]}
       >
-        {/* Bluetooth toggle */}
+        {/* iOS owns the Bluetooth radio state; apps can only observe it. */}
         <View
           style={[
             styles.bluetoothCard,
@@ -471,7 +483,9 @@ export default function DevicesScreen() {
               style={[
                 styles.btIcon,
                 {
-                  backgroundColor: isBluetoothOn ? colors.primary : colors.muted,
+                  backgroundColor: isBluetoothOn
+                    ? colors.primary
+                    : colors.muted,
                 },
               ]}
             >
@@ -485,24 +499,42 @@ export default function DevicesScreen() {
               <Text style={[styles.btTitle, { color: colors.foreground }]}>
                 Bluetooth
               </Text>
-              <Text style={[styles.btStatus, { color: isBluetoothOn ? colors.primary : colors.mutedForeground }]}>
-                {isBluetoothOn ? "Enabled — ready to scan" : "Disabled — turn on to connect"}
+              <Text
+                style={[
+                  styles.btStatus,
+                  {
+                    color: isBluetoothOn
+                      ? colors.primary
+                      : colors.mutedForeground,
+                  },
+                ]}
+              >
+                {isBluetoothOn
+                  ? "Enabled — ready to scan"
+                  : "Disabled — turn on to connect"}
               </Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={[
-              styles.btToggle,
-              {
-                backgroundColor: isBluetoothOn ? colors.primary : colors.muted,
-              },
-            ]}
-            onPress={handleToggleBluetooth}
-          >
-            <Text style={[styles.btToggleText, { color: isBluetoothOn ? "#fff" : colors.mutedForeground }]}>
-              {isBluetoothOn ? "On" : "Off"}
-            </Text>
-          </TouchableOpacity>
+          {isBluetoothOn ? (
+            <View
+              style={[styles.btToggle, { backgroundColor: colors.primary }]}
+            >
+              <Text style={[styles.btToggleText, { color: "#fff" }]}>
+                Ready
+              </Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[styles.btToggle, { backgroundColor: colors.muted }]}
+              onPress={handleToggleBluetooth}
+            >
+              <Text
+                style={[styles.btToggleText, { color: colors.mutedForeground }]}
+              >
+                Settings
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Scan button — only when BT is on */}
@@ -523,7 +555,9 @@ export default function DevicesScreen() {
               {isScanning ? (
                 <>
                   <ActivityIndicator size="small" color={colors.destructive} />
-                  <Text style={[styles.scanBtnText, { color: colors.destructive }]}>
+                  <Text
+                    style={[styles.scanBtnText, { color: colors.destructive }]}
+                  >
                     Stop Scanning
                   </Text>
                 </>
@@ -540,10 +574,15 @@ export default function DevicesScreen() {
             {isScanning && (
               <Animated.View
                 entering={FadeIn}
-                style={[styles.scanningBanner, { backgroundColor: colors.muted }]}
+                style={[
+                  styles.scanningBanner,
+                  { backgroundColor: colors.muted },
+                ]}
               >
                 <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={[styles.scanningText, { color: colors.foreground }]}>
+                <Text
+                  style={[styles.scanningText, { color: colors.foreground }]}
+                >
                   Searching nearby Wear OS devices via Bluetooth...
                 </Text>
               </Animated.View>
@@ -613,36 +652,59 @@ export default function DevicesScreen() {
         {!isBluetoothOn && (
           <View style={styles.emptyState}>
             <View style={[styles.emptyIcon, { backgroundColor: colors.muted }]}>
-              <Feather name="bluetooth" size={36} color={colors.mutedForeground} />
+              <Feather
+                name="bluetooth"
+                size={36}
+                color={colors.mutedForeground}
+              />
             </View>
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
               Bluetooth is off
             </Text>
             <Text style={[styles.emptyDesc, { color: colors.mutedForeground }]}>
-              Turn on Bluetooth above to scan for and connect to your Wear OS watch
+              Turn on Bluetooth above to scan for and connect to your Wear OS
+              watch
             </Text>
           </View>
         )}
 
-        {isBluetoothOn && !isScanning && discoveredDevices.length === 0 && devices.length === 0 && (
-          <View style={styles.emptyState}>
-            <View style={[styles.emptyIcon, { backgroundColor: colors.muted }]}>
-              <Feather name="watch" size={36} color={colors.mutedForeground} />
+        {isBluetoothOn &&
+          !isScanning &&
+          discoveredDevices.length === 0 &&
+          devices.length === 0 && (
+            <View style={styles.emptyState}>
+              <View
+                style={[styles.emptyIcon, { backgroundColor: colors.muted }]}
+              >
+                <Feather
+                  name="watch"
+                  size={36}
+                  color={colors.mutedForeground}
+                />
+              </View>
+              <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
+                No watches found
+              </Text>
+              <Text
+                style={[styles.emptyDesc, { color: colors.mutedForeground }]}
+              >
+                Make sure your Wear OS watch has Bluetooth enabled and is within
+                range, then tap Scan
+              </Text>
             </View>
-            <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
-              No watches found
-            </Text>
-            <Text style={[styles.emptyDesc, { color: colors.mutedForeground }]}>
-              Make sure your Wear OS watch has Bluetooth enabled and is within range, then tap Scan
-            </Text>
-          </View>
-        )}
+          )}
 
         {/* Info tip */}
-        <View style={[styles.tip, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.tip,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
           <Feather name="info" size={15} color={colors.mutedForeground} />
           <Text style={[styles.tipText, { color: colors.mutedForeground }]}>
-            Keep your Wear OS watch and iPhone within 10 meters during pairing. On the watch, accept the pairing request when prompted.
+            Keep your Wear OS watch and iPhone within 10 meters during pairing.
+            On the watch, accept the pairing request when prompted.
           </Text>
         </View>
       </ScrollView>
@@ -658,13 +720,6 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 28, fontFamily: "Inter_700Bold" },
   subtitle: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
-  bridgeRow: {
-    marginTop: 6,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  bridgeText: { fontSize: 12, fontFamily: "Inter_500Medium" },
   scroll: { paddingHorizontal: 20, gap: 14 },
   bluetoothCard: {
     flexDirection: "row",
@@ -755,5 +810,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "flex-start",
   },
-  tipText: { flex: 1, fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 19 },
+  tipText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    lineHeight: 19,
+  },
 });

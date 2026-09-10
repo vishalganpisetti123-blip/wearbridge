@@ -30,14 +30,24 @@ export default function HomeScreen() {
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: false }),
-      Animated.spring(slideAnim, { toValue: 0, tension: 80, friction: 10, useNativeDriver: false }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: false,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 80,
+        friction: 10,
+        useNativeDriver: false,
+      }),
     ]).start();
   }, []);
 
   const handleRefresh = async () => {
     if (connectedDevice) {
-      if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (Platform.OS !== "web")
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       await syncDevice(connectedDevice.id);
     }
   };
@@ -75,7 +85,10 @@ export default function HomeScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 + bottomPad }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: 120 + bottomPad },
+        ]}
         refreshControl={
           <RefreshControl
             refreshing={isSyncing}
@@ -89,30 +102,67 @@ export default function HomeScreen() {
         >
           {connectedDevice ? (
             <>
-              <View style={[styles.connectionBanner, { backgroundColor: colors.tealLight }]}>
-                <View style={[styles.connectedIndicator, { backgroundColor: colors.success }]} />
+              <View
+                style={[
+                  styles.connectionBanner,
+                  { backgroundColor: colors.tealLight },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.connectedIndicator,
+                    { backgroundColor: colors.success },
+                  ]}
+                />
                 <Text style={[styles.connectedText, { color: colors.teal }]}>
                   Connected to {connectedDevice.name}
                 </Text>
                 <Text style={[styles.batteryText, { color: colors.teal }]}>
-                  {connectedDevice.batteryLevel}%{" "}
+                  {connectedDevice.batteryLevel === null
+                    ? "Battery —"
+                    : `${connectedDevice.batteryLevel}%`}{" "}
                   {connectedDevice.isCharging ? "⚡" : ""}
                 </Text>
               </View>
 
-              <View style={[styles.hrCard, { backgroundColor: colors.navyDark }]}>
+              <View
+                style={[styles.hrCard, { backgroundColor: colors.navyDark }]}
+              >
                 <View style={styles.hrHeader}>
                   <View>
-                    <Text style={[styles.hrTitle, { color: "rgba(255,255,255,0.6)" }]}>
+                    <Text
+                      style={[
+                        styles.hrTitle,
+                        { color: "rgba(255,255,255,0.6)" },
+                      ]}
+                    >
                       Heart Rate
                     </Text>
-                    <Text style={[styles.hrSub, { color: "rgba(255,255,255,0.4)" }]}>
-                      Live monitoring
+                    <Text
+                      style={[styles.hrSub, { color: "rgba(255,255,255,0.4)" }]}
+                    >
+                      {connectedDevice.heartRate === null
+                        ? "Waiting for a watch sample"
+                        : "Latest watch sample"}
                     </Text>
                   </View>
-                  <View style={[styles.liveChip, { backgroundColor: colors.destructive + "30" }]}>
-                    <View style={[styles.liveDot, { backgroundColor: colors.destructive }]} />
-                    <Text style={[styles.liveText, { color: colors.destructive }]}>LIVE</Text>
+                  <View
+                    style={[
+                      styles.liveChip,
+                      { backgroundColor: colors.destructive + "30" },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.liveDot,
+                        { backgroundColor: colors.destructive },
+                      ]}
+                    />
+                    <Text
+                      style={[styles.liveText, { color: colors.destructive }]}
+                    >
+                      LIVE
+                    </Text>
                   </View>
                 </View>
                 <HeartRateChart heartRate={connectedDevice.heartRate} />
@@ -121,14 +171,18 @@ export default function HomeScreen() {
               <View style={styles.statsGrid}>
                 <StatCard
                   icon="trending-up"
-                  value={connectedDevice.steps.toLocaleString()}
+                  value={
+                    connectedDevice.steps === null
+                      ? "—"
+                      : connectedDevice.steps.toLocaleString()
+                  }
                   label="Steps"
                   color={colors.primary}
                   bgColor={colors.blueLight}
                 />
                 <StatCard
                   icon="zap"
-                  value={connectedDevice.calories.toString()}
+                  value={connectedDevice.calories?.toString() ?? "—"}
                   unit="kcal"
                   label="Calories"
                   color="#f59e0b"
@@ -139,58 +193,40 @@ export default function HomeScreen() {
               <View style={styles.statsGrid}>
                 <StatCard
                   icon="map-pin"
-                  value={connectedDevice.distance.toString()}
+                  value={connectedDevice.distance?.toString() ?? "—"}
                   unit="km"
                   label="Distance"
                   color={colors.success}
                   bgColor="#dcfce7"
                 />
                 <StatCard
-                  icon="moon"
-                  value={connectedDevice.sleepHours.toString()}
-                  unit="hrs"
-                  label="Sleep"
+                  icon="clock"
+                  value={connectedDevice.activeMinutes?.toString() ?? "—"}
+                  unit="min"
+                  label="Active"
                   color="#8b5cf6"
                   bgColor="#ede9fe"
                 />
               </View>
-
-              {connectedDevice.notifications.length > 0 && (
-                <View style={styles.section}>
-                  <SectionHeader
-                    title="Watch Notifications"
-                    action={`${connectedDevice.notifications.filter((n) => n.unread).length} unread`}
-                    onAction={() => router.push(`/watch/${connectedDevice.id}`)}
-                  />
-                  {connectedDevice.notifications.slice(0, 3).map((n) => (
-                    <View key={n.id} style={[styles.notifPreview, { backgroundColor: colors.card }]}>
-                      <View style={[styles.notifDot, { backgroundColor: n.unread ? colors.primary : "transparent" }]} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.notifApp, { color: colors.mutedForeground }]}>
-                          {n.app}
-                        </Text>
-                        <Text style={[styles.notifTitle, { color: colors.foreground }]} numberOfLines={1}>
-                          {n.title}
-                        </Text>
-                      </View>
-                      <Text style={[styles.notifTime, { color: colors.mutedForeground }]}>
-                        {n.time}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
             </>
           ) : (
             <View style={styles.emptyState}>
-              <View style={[styles.emptyIcon, { backgroundColor: colors.muted }]}>
-                <Feather name="watch" size={40} color={colors.mutedForeground} />
+              <View
+                style={[styles.emptyIcon, { backgroundColor: colors.muted }]}
+              >
+                <Feather
+                  name="watch"
+                  size={40}
+                  color={colors.mutedForeground}
+                />
               </View>
               <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
                 No watch connected
               </Text>
-              <Text style={[styles.emptyDesc, { color: colors.mutedForeground }]}>
-                Add your Wear OS watch to start syncing health data and notifications
+              <Text
+                style={[styles.emptyDesc, { color: colors.mutedForeground }]}
+              >
+                Add your Wear OS watch to start receiving supported health data
               </Text>
               <TouchableOpacity
                 style={[styles.emptyBtn, { backgroundColor: colors.primary }]}
@@ -316,32 +352,6 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 10,
-  },
-  notifPreview: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    padding: 12,
-    borderRadius: 12,
-  },
-  notifDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  notifApp: {
-    fontSize: 11,
-    fontFamily: "Inter_500Medium",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  notifTitle: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-  },
-  notifTime: {
-    fontSize: 11,
-    fontFamily: "Inter_400Regular",
   },
   emptyState: {
     alignItems: "center",
