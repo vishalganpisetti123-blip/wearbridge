@@ -20,7 +20,7 @@
         "NSBluetoothPeripheralUsageDescription": "WearBridge uses Bluetooth to connect to your Wear OS watch.",
         "UIBackgroundModes": ["bluetooth-central"]
       },
-      "bundleIdentifier": "com.wearbridge.ios"
+      "bundleIdentifier": "com.vishalganpisetti.wearbridge"
     },
     "android": {},
     "web": {
