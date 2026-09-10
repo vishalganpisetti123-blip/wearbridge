@@ -15,6 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
+      "appleTeamId": "VH29KRPFWB",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "WearBridge uses Bluetooth to scan for and connect to your Wear OS watch.",
         "NSBluetoothPeripheralUsageDescription": "WearBridge uses Bluetooth to connect to your Wear OS watch.",
