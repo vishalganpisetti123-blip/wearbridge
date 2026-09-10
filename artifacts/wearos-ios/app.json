@@ -42,7 +42,8 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "./plugins/with-path-safe-ios-build-scripts.cjs"
     ],
     "experiments": {
       "typedRoutes": true,
